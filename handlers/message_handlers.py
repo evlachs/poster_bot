@@ -1,6 +1,7 @@
 # импорт типов и состояний из библиотеки aiogram
 from aiogram import types
 from aiogram.dispatcher import FSMContext
+from aiogram.utils.exceptions import BotBlocked, BadRequest
 
 # импорт модулей бота
 from states import Form
@@ -41,7 +42,7 @@ async def make_a_post_command(message: types.Message, state: FSMContext):
 
 # принимаем первое фото для поста
 @dp.message_handler(state=Form.first_photo, content_types=['photo'])
-async def set_post_photo(message: types.Message, state: FSMContext):
+async def set_post_photo_1(message: types.Message, state: FSMContext):
     # проверяем, чтобы в сообщении было только одно фото
     if message.media_group_id:
         return
@@ -57,7 +58,7 @@ async def set_post_photo(message: types.Message, state: FSMContext):
 
 # принимаем второе фото для поста
 @dp.message_handler(state=Form.second_photo, content_types='photo')
-async def set_post_photo(message: types.Message, state: FSMContext):
+async def set_post_photo_2(message: types.Message, state: FSMContext):
     # проверяем, чтобы в сообщении было только одно фото
     if message.media_group_id:
         return
@@ -73,7 +74,7 @@ async def set_post_photo(message: types.Message, state: FSMContext):
 
 # принимаем третье фото для поста и представляем пользователю итоговый результат его поста
 @dp.message_handler(state=Form.third_photo, content_types='photo')
-async def set_post_photo(message: types.Message, state: FSMContext):
+async def set_post_photo_3(message: types.Message, state: FSMContext):
     # проверяем, чтобы в сообщении было только одно фото
     if message.media_group_id:
         return
@@ -111,7 +112,7 @@ async def set_post_description(message: types.Message, state: FSMContext):
 
 # узнаем часы работы организации для рекламы
 @dp.message_handler(state=Form.work_time)
-async def set_post_title(message: types.Message, state: FSMContext):
+async def set_post_time(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['message'] = data['message'].replace('work_time', message.text)
     await Form.contacts.set()
@@ -120,7 +121,7 @@ async def set_post_title(message: types.Message, state: FSMContext):
 
 # узнаем название организации
 @dp.message_handler(state=Form.organisation)
-async def set_post_title(message: types.Message, state: FSMContext):
+async def set_post_organisation(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['message'] = data['message'].replace('organisation', message.text)
     await Form.description.set()
@@ -129,7 +130,7 @@ async def set_post_title(message: types.Message, state: FSMContext):
 
 # узнаем контакты для поста и добавляем к описанию
 @dp.message_handler(state=Form.contacts)
-async def set_post_title(message: types.Message, state: FSMContext):
+async def set_post_contact(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['message'] = data['message'].replace('contact', message.text)
     # если пост относится к продажам, то просим юзера прислать фото товара
@@ -143,7 +144,7 @@ async def set_post_title(message: types.Message, state: FSMContext):
 
 # добавляем цену товара
 @dp.message_handler(state=Form.price)
-async def set_post_title(message: types.Message, state: FSMContext):
+async def set_post_price(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['message'] = data['message'].replace('price', message.text)
     await Form.contacts.set()
@@ -180,8 +181,16 @@ async def make_a_post_command(message: types.Message, state: FSMContext):
         await Form.description.set()
         await bot.send_message(message.from_user.id, MESSAGES['question_description'])
     else:
-        admins = await bot.get_chat_administrators(message.chat.id)
+        try:
+            admins = await bot.get_chat_administrators(message.chat.id)
+        except BadRequest:
+            admins = []
         admins_ids = [i.user.id for i in admins]
         if message.from_user.id not in admins_ids:
             await bot.delete_message(message.chat.id, message.message_id)
-            await bot.send_message(message.from_user.id, MESSAGES['del_message'], reply_markup=make_a_post_keyboard)
+            try:
+                await bot.send_message(message.from_user.id, MESSAGES['del_message'], reply_markup=make_a_post_keyboard)
+            except BotBlocked:
+                print('Бот не смог отправить сообщение, так как был заблокирован пользователем.')
+            except:
+                return
