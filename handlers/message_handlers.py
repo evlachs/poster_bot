@@ -179,6 +179,12 @@ async def set_appeal_time(message: types.Message, state: FSMContext):
     await Form.description.set()
     await bot.send_message(message.from_user.id, MESSAGES['set_description'])
 
+
+@dp.message_handler(content_types=['new_chat_members', 'left_chat_member'])
+async def del_welcome_message(message: types.Message):
+    await bot.delete_message(message.chat.id, message.message_id)
+
+
 async def delete_message(msg: types.Message, time: int):
     await asyncio.sleep(time)
     await bot.delete_message(msg.chat.id, msg.message_id)
