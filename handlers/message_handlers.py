@@ -3,11 +3,14 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.utils.exceptions import BotBlocked, BadRequest
 
+import asyncio
+
 # импорт модулей бота
 from states import Form
 from loader import dp, bot
 from messages import MESSAGES
-from keyboards import make_a_post_keyboard, cancel_photo_keyboard, confirm_post_keyboard, photo_keyboard,\
+from conf import CHANNEL
+from keyboards import make_a_post_keyboard, cancel_photo_keyboard, confirm_post_keyboard, photo_keyboard, \
     choose_a_post_keyboard
 
 
@@ -23,10 +26,10 @@ async def start_message(message: types.Message):
     with open('data/users_id.txt', 'r+') as file:
         if not str(message.chat.id) in file.read().split('\n'):
             file.seek(0, 2)
-            file.write(str(message.chat.id)+'\n')
+            file.write(str(message.chat.id) + '\n')
 
 
-# брабатываем команду /cancel и завершаем любое начатое пользователем действие
+# обрабатываем команду /cancel и завершаем любое начатое пользователем действие
 @dp.message_handler(commands=['cancel'], state='*')
 async def make_a_post_command(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
@@ -97,26 +100,24 @@ async def set_post_description(message: types.Message, state: FSMContext):
             return
         data['message'] = data['message'].replace('description', message.text)
         if '#продажа' in data['message']:
-            await Form.price.set()
-            await bot.send_message(message.from_user.id, MESSAGES['set_price'])
-        elif '#покупка' in data['message']:
-            await Form.contacts.set()
-            await bot.send_message(message.from_user.id, MESSAGES['set_contact'])
-        elif '#реклама' in data['message']:
-            await Form.work_time.set()
-            await bot.send_message(message.from_user.id, MESSAGES['set_work_time'])
+            await Form.first_photo.set()
+            await bot.send_message(message.from_user.id, MESSAGES['set_photo'])
+            return
         elif '#вопрос' in data['message']:
             await Form.contacts.set()
             await bot.send_message(message.from_user.id, MESSAGES['set_contact'])
+            return
+        await bot.send_message(message.from_user.id, data['message'])
+        await bot.send_message(message.from_user.id, MESSAGES['confirm_post'], reply_markup=confirm_post_keyboard)
 
 
 # узнаем часы работы организации для рекламы
 @dp.message_handler(state=Form.work_time)
-async def set_post_time(message: types.Message, state: FSMContext):
+async def set_work_time(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['message'] = data['message'].replace('work_time', message.text)
-    await Form.contacts.set()
-    await bot.send_message(message.from_user.id, MESSAGES['set_contact'])
+    await Form.description.set()
+    await bot.send_message(message.from_user.id, MESSAGES['set_description'])
 
 
 # узнаем название организации
@@ -124,8 +125,8 @@ async def set_post_time(message: types.Message, state: FSMContext):
 async def set_post_organisation(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['message'] = data['message'].replace('organisation', message.text)
-    await Form.description.set()
-    await bot.send_message(message.from_user.id, MESSAGES['ad_description'])
+    await Form.contacts.set()
+    await bot.send_message(message.from_user.id, MESSAGES['set_contact'])
 
 
 # узнаем контакты для поста и добавляем к описанию
@@ -134,9 +135,13 @@ async def set_post_contact(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['message'] = data['message'].replace('contact', message.text)
     # если пост относится к продажам, то просим юзера прислать фото товара
-    if '#продажа' in data['message']:
-        await Form.first_photo.set()
-        await bot.send_message(message.from_user.id, MESSAGES['set_photo'], reply_markup=cancel_photo_keyboard)
+    if '#продажа' in data['message'] or '#покупка' in data['message']:
+        await Form.appeal_time.set()
+        await bot.send_message(message.from_user.id, MESSAGES['set_appeal_time'])
+        return
+    elif '#реклама' in data['message']:
+        await Form.work_time.set()
+        await bot.send_message(message.from_user.id, MESSAGES['set_work_time'])
         return
     await bot.send_message(message.from_user.id, data['message'])
     await bot.send_message(message.from_user.id, MESSAGES['confirm_post'], reply_markup=confirm_post_keyboard)
@@ -151,46 +156,93 @@ async def set_post_price(message: types.Message, state: FSMContext):
     await bot.send_message(message.from_user.id, MESSAGES['set_contact'])
 
 
+@dp.message_handler(state=Form.sale)
+async def set_sale(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['message'] = data['message'].replace('sale', message.text)
+    await Form.price.set()
+    await bot.send_message(message.from_user.id, MESSAGES['set_price'])
+
+
+@dp.message_handler(state=Form.buy)
+async def set_buy(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['message'] = data['message'].replace('buy', message.text)
+    await Form.price.set()
+    await bot.send_message(message.from_user.id, MESSAGES['set_price'])
+
+
+@dp.message_handler(state=Form.appeal_time)
+async def set_appeal_time(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['message'] = data['message'].replace('appeal', message.text)
+    await Form.description.set()
+    await bot.send_message(message.from_user.id, MESSAGES['set_description'])
+
+async def delete_message(msg: types.Message, time: int):
+    await asyncio.sleep(time)
+    await bot.delete_message(msg.chat.id, msg.message_id)
+
+
 # отлавливаем нажатие на кнопку с соответствующе категорией поста и формируем под него сообщение
 @dp.message_handler()
 async def make_a_post_command(message: types.Message, state: FSMContext):
-    if message.text in ['/post', '📢 Создать пост']:
+    if message.chat.id != CHANNEL:
+        its_not_chat = True
+    else:
+        its_not_chat = False
+
+    if message.text in ['/post', '📢 Создать пост'] and its_not_chat:
         await bot.send_message(message.from_user.id, MESSAGES['choose_a_post'], reply_markup=choose_a_post_keyboard)
-    elif message.text == 'Продажа 💲':
+    elif message.text == 'Продажа 💲' and its_not_chat:
         async with state.proxy() as data:
-            data['message'] = 'description\n\n💲 Цена: price\n\nКонтакты: contact\n\n#продажа'
-        await Form.description.set()
-        await bot.send_message(message.from_user.id, MESSAGES['sale_description'])
-    elif message.text == 'Покупка 🛒':
+            data['message'] = '<b>🧳 Продам sale</b>\n\n' \
+                              '<b>💰Цена:</b> price\n' \
+                              '<b>📱Контакты:</b> contact\n' \
+                              '<b>🕖Время обращения:</b> appeal\n\n' \
+                              '<b>📄Описание:</b> description\n\n#продажа'
+        await Form.sale.set()
+        await bot.send_message(message.from_user.id, MESSAGES['set_sale'])
+    elif message.text == 'Покупка 🛒' and its_not_chat:
         async with state.proxy() as data:
-            data['message'] = '🛒 description\n\nКонтакты: contact\n\n#покупка'
+            data['message'] = '<b>🧳 Куплю\Сниму buy</b>\n\n' \
+                              '<b>💰Цена:</b> price\n' \
+                              '<b>📱Контакты:</b> contact\n' \
+                              '<b>🕖Время обращения:</b> appeal\n\n' \
+                              '<b>📄Описание:</b> description\n\n#покупка'
             data['photo'] = None
-        await Form.description.set()
-        await bot.send_message(message.from_user.id, MESSAGES['purchase_description'])
-    elif message.text == 'Реклама 📺':
+        await Form.buy.set()
+        await bot.send_message(message.from_user.id, MESSAGES['set_buy'])
+    elif message.text == 'Реклама 📺' and its_not_chat:
         async with state.proxy() as data:
-            data['message'] = '📺 Организация: organisation\n\ndescription\n\nЧасы работы: work_time\n\n' \
-                              'Контакты: contact\n\n#реклама'
+            data['message'] = '<b>🏫 Организация organisation</b>\n\n' \
+                              '<b>📱Контакты:</b> contact\n' \
+                              '<b>🕖Часы работы:</b> work_time\n\n' \
+                              '<b>📄Описание:</b> description\n\n#реклама'
             data['photo'] = None
         await Form.organisation.set()
         await bot.send_message(message.from_user.id, MESSAGES['set_organisation'])
-    elif message.text == 'Вопрос ❓':
+    elif message.text == 'Вопрос ❓' and its_not_chat:
         async with state.proxy() as data:
-            data['message'] = '❓ description\n\ncontact\n\n#вопрос'
+            data['message'] = '<b>❓Вопрос: description</b>\n\n' \
+                              '<b>📱Контакты:</b> contact\n\n#вопрос'
             data['photo'] = None
         await Form.description.set()
         await bot.send_message(message.from_user.id, MESSAGES['question_description'])
     else:
         try:
             admins = await bot.get_chat_administrators(message.chat.id)
+            admins_ids = [i.user.id for i in admins]
         except BadRequest:
-            admins = []
-        admins_ids = [i.user.id for i in admins]
+            admins_ids = [message.from_user.id]
         if message.from_user.id not in admins_ids:
             await bot.delete_message(message.chat.id, message.message_id)
+            msg = await bot.send_message(message.chat.id, MESSAGES['auto_delete_message'])
+            await delete_message(msg, 10)  # здесь вторым аргументом (после msg) передается время удаления сообщения
             try:
                 await bot.send_message(message.from_user.id, MESSAGES['del_message'], reply_markup=make_a_post_keyboard)
             except BotBlocked:
                 print('Бот не смог отправить сообщение, так как был заблокирован пользователем.')
-            except:
+            except Exception as e:
+                print(e)
                 return

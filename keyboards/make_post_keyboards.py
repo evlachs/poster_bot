@@ -6,10 +6,10 @@ sale_button = types.KeyboardButton('Продажа 💲')
 purchase_button = types.KeyboardButton('Покупка 🛒')
 advertisement_button = types.KeyboardButton('Реклама 📺')
 question_button = types.KeyboardButton('Вопрос ❓')
-cancel_button = types.InlineKeyboardButton('отмена действия ❌', callback_data='cancel')
-cancel_photo_button = types.InlineKeyboardButton('пост без фото ❌', callback_data='cancel_photo')
-confirm_post_button = types.InlineKeyboardButton('отправить пост ✔️', callback_data='confirm_post')
-finish_photo_button = types.InlineKeyboardButton('завершить добавление', callback_data='finish_photo')
+cancel_button = types.InlineKeyboardButton('Отмена❌', callback_data='cancel')
+cancel_photo_button = types.InlineKeyboardButton('Объявление без фото❌', callback_data='cancel_photo')
+confirm_post_button = types.InlineKeyboardButton('Сформировать пост✔️', callback_data='confirm_post')
+finish_photo_button = types.InlineKeyboardButton('Завершить добавление', callback_data='finish_photo')
 
 
 # по очереди создаем все необходимые клавиатуры, после чего добавляем в них кнопки

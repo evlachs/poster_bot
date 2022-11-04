@@ -11,3 +11,6 @@ class Form(StatesGroup):
     first_photo = State()
     second_photo = State()
     third_photo = State()
+    sale = State()
+    appeal_time = State()
+    buy = State()

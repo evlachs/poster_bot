@@ -1,6 +1,7 @@
 
 # токен бота
-TOKEN = 'TOKEN'
+TOKEN = 'BOT_TOKEN'
 
 # айди группы
 CHANNEL = 'CHANNEL_ID'
+
