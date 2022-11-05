@@ -1,7 +1,7 @@
 
 # токен бота
-TOKEN = 'BOT_TOKEN'
+TOKEN = '5403147212:AAGBUuwtUDbYjnBQ6wW4NJqBwbTlxhO4y1w'
 
 # айди группы
-CHANNEL = 'CHANNEL_ID'
+CHANNEL = -1001565301537
 
