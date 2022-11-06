@@ -109,7 +109,7 @@ async def set_work_time(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['message'] = data['message'].replace('work_time', message.text)
     await Form.description.set()
-    await bot.send_message(message.from_user.id, MESSAGES['set_description'])
+    await bot.send_message(message.from_user.id, MESSAGES['ad_description'])
 
 
 # узнаем название организации
