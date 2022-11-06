@@ -99,10 +99,6 @@ async def set_post_description(message: types.Message, state: FSMContext):
             await bot.send_message(message.from_user.id, MESSAGES['too_long_message'])
             return
         data['message'] = data['message'].replace('description', message.text)
-        if '#вопрос' in data['message']:
-            await Form.contacts.set()
-            await bot.send_message(message.from_user.id, MESSAGES['set_contact'])
-            return
         await Form.first_photo.set()
         await bot.send_message(message.from_user.id, MESSAGES['set_photo'], reply_markup=cancel_photo_keyboard)
 
@@ -139,8 +135,9 @@ async def set_post_contact(message: types.Message, state: FSMContext):
         await Form.work_time.set()
         await bot.send_message(message.from_user.id, MESSAGES['set_work_time'])
         return
-    await Form.first_photo.set()
-    await bot.send_message(message.from_user.id, MESSAGES['set_photo'], reply_markup=cancel_photo_keyboard)
+    elif '#вопрос' in data['message']:
+        await Form.description.set()
+        await bot.send_message(message.from_user.id, MESSAGES['question_description'])
 
 
 # добавляем цену товара
@@ -176,6 +173,14 @@ async def set_appeal_time(message: types.Message, state: FSMContext):
     await bot.send_message(message.from_user.id, MESSAGES['set_description'])
 
 
+@dp.message_handler(state=Form.question)
+async def set_question(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['message'] = data['message'].replace('question', message.text)
+    await Form.contacts.set()
+    await bot.send_message(message.from_user.id, MESSAGES['set_contact'])
+
+
 @dp.message_handler(content_types=['new_chat_members', 'left_chat_member'])
 async def del_welcome_message(message: types.Message):
     await bot.delete_message(message.chat.id, message.message_id)
@@ -198,7 +203,7 @@ async def make_a_post_command(message: types.Message, state: FSMContext):
         await bot.send_message(message.from_user.id, MESSAGES['choose_a_post'], reply_markup=choose_a_post_keyboard)
     elif message.text == 'Продажа 💲' and its_not_chat:
         async with state.proxy() as data:
-            data['message'] = '<b>🧳 Продам sale</b>\n\n' \
+            data['message'] = '<b>🧳 sale</b>\n\n' \
                               '<b>💰Цена:</b> price\n' \
                               '<b>📱Контакты:</b> contact\n' \
                               '<b>🕖Время обращения:</b> appeal\n\n' \
@@ -207,7 +212,7 @@ async def make_a_post_command(message: types.Message, state: FSMContext):
         await bot.send_message(message.from_user.id, MESSAGES['set_sale'])
     elif message.text == 'Покупка 🛒' and its_not_chat:
         async with state.proxy() as data:
-            data['message'] = '<b>🧳 Куплю\Сниму buy</b>\n\n' \
+            data['message'] = '<b>🧳 buy</b>\n\n' \
                               '<b>💰Цена:</b> price\n' \
                               '<b>📱Контакты:</b> contact\n' \
                               '<b>🕖Время обращения:</b> appeal\n\n' \
@@ -217,20 +222,21 @@ async def make_a_post_command(message: types.Message, state: FSMContext):
         await bot.send_message(message.from_user.id, MESSAGES['set_buy'])
     elif message.text == 'Реклама 📺' and its_not_chat:
         async with state.proxy() as data:
-            data['message'] = '<b>🏫 Организация organisation</b>\n\n' \
+            data['message'] = '<b>🏫 organisation</b>\n\n' \
                               '<b>📱Контакты:</b> contact\n' \
-                              '<b>🕖Часы работы:</b> work_time\n\n' \
+                              '<b>🕖Время обращения:</b> work_time\n\n' \
                               '<b>📄Описание:</b> description\n\n#реклама'
             data['photo'] = None
         await Form.organisation.set()
         await bot.send_message(message.from_user.id, MESSAGES['set_organisation'])
     elif message.text == 'Вопрос ❓' and its_not_chat:
         async with state.proxy() as data:
-            data['message'] = '<b>❓Вопрос: description</b>\n\n' \
-                              '<b>📱Контакты:</b> contact\n\n#вопрос'
+            data['message'] = '<b>❓question</b>\n' \
+                              '<b>📱Контакты:</b> contact\n\n' \
+                              '<b>📄Описание:</b> description\n\n#вопрос'
             data['photo'] = None
-        await Form.description.set()
-        await bot.send_message(message.from_user.id, MESSAGES['question_description'])
+        await Form.question.set()
+        await bot.send_message(message.from_user.id, MESSAGES['set_question'])
     else:
         try:
             admins = await bot.get_chat_administrators(message.chat.id)

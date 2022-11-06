@@ -14,3 +14,4 @@ class Form(StatesGroup):
     sale = State()
     appeal_time = State()
     buy = State()
+    question = State()
