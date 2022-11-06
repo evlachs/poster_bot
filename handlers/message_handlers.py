@@ -178,7 +178,6 @@ async def set_appeal_time(message: types.Message, state: FSMContext):
         await bot.send_message(message.from_user.id, MESSAGES['sale_description'])
 
 
-
 @dp.message_handler(state=Form.question)
 async def set_question(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
