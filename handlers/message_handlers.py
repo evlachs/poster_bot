@@ -170,7 +170,13 @@ async def set_appeal_time(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['message'] = data['message'].replace('appeal', message.text)
     await Form.description.set()
-    await bot.send_message(message.from_user.id, MESSAGES['set_description'])
+    if '#покупка' in data['message']:
+        await bot.send_message(message.from_user.id, MESSAGES['purchase_description'])
+    elif '#реклама' in data['message']:
+        await bot.send_message(message.from_user.id, MESSAGES['ad_description'])
+    elif '#продажа' in data['message']:
+        await bot.send_message(message.from_user.id, MESSAGES['sale_description'])
+
 
 
 @dp.message_handler(state=Form.question)
