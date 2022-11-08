@@ -95,7 +95,7 @@ async def set_post_photo_3(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Form.description)
 async def set_post_description(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        if len(message.text) > 200:
+        if len(message.text) > 300:
             await bot.send_message(message.from_user.id, MESSAGES['too_long_message'])
             return
         data['message'] = data['message'].replace('description', message.text)
@@ -208,37 +208,37 @@ async def make_a_post_command(message: types.Message, state: FSMContext):
         await bot.send_message(message.from_user.id, MESSAGES['choose_a_post'], reply_markup=choose_a_post_keyboard)
     elif message.text == 'Продажа 💲' and its_not_chat:
         async with state.proxy() as data:
-            data['message'] = '<b>🧳 sale</b>\n\n' \
+            data['message'] = '#продажа\n<b>🧳 sale</b>\n\n' \
                               '<b>💰Цена:</b> price\n' \
                               '<b>📱Контакты:</b> contact\n' \
                               '<b>🕖Время обращения:</b> appeal\n\n' \
-                              '<b>📄Описание:</b> description\n\n#продажа'
+                              '<b>📄Описание:</b> description\n\nДля создания рекламных постов пишите: @Gubkinski_bot'
         await Form.sale.set()
         await bot.send_message(message.from_user.id, MESSAGES['set_sale'])
     elif message.text == 'Покупка 🛒' and its_not_chat:
         async with state.proxy() as data:
-            data['message'] = '<b>🧳 buy</b>\n\n' \
+            data['message'] = '#покупка\n<b>🧳 buy</b>\n\n' \
                               '<b>💰Цена:</b> price\n' \
                               '<b>📱Контакты:</b> contact\n' \
                               '<b>🕖Время обращения:</b> appeal\n\n' \
-                              '<b>📄Описание:</b> description\n\n#покупка'
+                              '<b>📄Описание:</b> description\n\nДля создания рекламных постов пишите: @Gubkinski_bot'
             data['photo'] = None
         await Form.buy.set()
         await bot.send_message(message.from_user.id, MESSAGES['set_buy'])
     elif message.text == 'Реклама 📺' and its_not_chat:
         async with state.proxy() as data:
-            data['message'] = '<b>🏫 organisation</b>\n\n' \
+            data['message'] = '#реклама\n<b>🏫 organisation</b>\n\n' \
                               '<b>📱Контакты:</b> contact\n' \
                               '<b>🕖Время обращения:</b> work_time\n\n' \
-                              '<b>📄Описание:</b> description\n\n#реклама'
+                              '<b>📄Описание:</b> description\n\nДля создания рекламных постов пишите: @Gubkinski_bot'
             data['photo'] = None
         await Form.organisation.set()
         await bot.send_message(message.from_user.id, MESSAGES['set_organisation'])
     elif message.text == 'Вопрос ❓' and its_not_chat:
         async with state.proxy() as data:
-            data['message'] = '<b>❓question</b>\n' \
+            data['message'] = '#вопрос\n<b>❓question</b>\n' \
                               '<b>📱Контакты:</b> contact\n\n' \
-                              '<b>📄Описание:</b> description\n\n#вопрос'
+                              '<b>📄Описание:</b> description\n\nДля создания рекламных постов пишите: @Gubkinski_bot'
             data['photo'] = None
         await Form.question.set()
         await bot.send_message(message.from_user.id, MESSAGES['set_question'])
