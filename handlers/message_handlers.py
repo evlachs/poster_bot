@@ -197,7 +197,7 @@ async def delete_message(message: types.Message, time: int):
 
 
 # отлавливаем нажатие на кнопку с соответствующе категорией поста и формируем под него сообщение
-@dp.message_handler()
+@dp.message_handler(content_types=['text', 'photo'])
 async def make_a_post_command(message: types.Message, state: FSMContext):
     if message.chat.id != CHANNEL:
         its_not_chat = True
