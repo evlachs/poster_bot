@@ -212,7 +212,8 @@ async def make_a_post_command(message: types.Message, state: FSMContext):
                               '<b>💰Цена:</b> price\n' \
                               '<b>📱Контакты:</b> contact\n' \
                               '<b>🕖Время обращения:</b> appeal\n\n' \
-                              '<b>📄Описание:</b> description\n\nДля создания рекламных постов пишите: @Gubkinski_bot'
+                              '<b>📄Описание:</b> description\n\n' \
+                              '<b>Для создания рекламных постов пишите: @Gubkinski_bot</b>'
         await Form.sale.set()
         await bot.send_message(message.from_user.id, MESSAGES['set_sale'])
     elif message.text == 'Покупка 🛒' and its_not_chat:
@@ -221,7 +222,8 @@ async def make_a_post_command(message: types.Message, state: FSMContext):
                               '<b>💰Цена:</b> price\n' \
                               '<b>📱Контакты:</b> contact\n' \
                               '<b>🕖Время обращения:</b> appeal\n\n' \
-                              '<b>📄Описание:</b> description\n\nДля создания рекламных постов пишите: @Gubkinski_bot'
+                              '<b>📄Описание:</b> description\n\n' \
+                              '<b>Для создания рекламных постов пишите: @Gubkinski_bot</b>'
             data['photo'] = None
         await Form.buy.set()
         await bot.send_message(message.from_user.id, MESSAGES['set_buy'])
@@ -230,7 +232,8 @@ async def make_a_post_command(message: types.Message, state: FSMContext):
             data['message'] = '#реклама\n<b>🏫 organisation</b>\n\n' \
                               '<b>📱Контакты:</b> contact\n' \
                               '<b>🕖Время обращения:</b> work_time\n\n' \
-                              '<b>📄Описание:</b> description\n\nДля создания рекламных постов пишите: @Gubkinski_bot'
+                              '<b>📄Описание:</b> description\n\n' \
+                              '<b>Для создания рекламных постов пишите: @Gubkinski_bot</b>'
             data['photo'] = None
         await Form.organisation.set()
         await bot.send_message(message.from_user.id, MESSAGES['set_organisation'])
@@ -238,7 +241,8 @@ async def make_a_post_command(message: types.Message, state: FSMContext):
         async with state.proxy() as data:
             data['message'] = '#вопрос\n<b>❓question</b>\n' \
                               '<b>📱Контакты:</b> contact\n\n' \
-                              '<b>📄Описание:</b> description\n\nДля создания рекламных постов пишите: @Gubkinski_bot'
+                              '<b>📄Описание:</b> description\n\n' \
+                              '<b>Для создания рекламных постов пишите: @Gubkinski_bot</b>'
             data['photo'] = None
         await Form.question.set()
         await bot.send_message(message.from_user.id, MESSAGES['set_question'])
