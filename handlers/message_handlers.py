@@ -17,6 +17,8 @@ from keyboards import make_a_post_keyboard, cancel_photo_keyboard, confirm_post_
 # обрабатываем команды /start /help
 @dp.message_handler(commands=['start', 'help'])
 async def start_message(message: types.Message):
+    if message.chat.id == CHANNEL:
+        return
     await dp.bot.send_message(
         message.chat.id,
         MESSAGES['start'].format(message.from_user.username),
@@ -197,7 +199,7 @@ async def delete_message(message: types.Message, time: int):
 
 
 # отлавливаем нажатие на кнопку с соответствующе категорией поста и формируем под него сообщение
-@dp.message_handler(content_types=['text', 'photo'])
+@dp.message_handler(content_types=[types.ContentType.ANY])
 async def make_a_post_command(message: types.Message, state: FSMContext):
     if message.chat.id != CHANNEL:
         its_not_chat = True

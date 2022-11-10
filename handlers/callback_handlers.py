@@ -1,3 +1,6 @@
+import json
+import string
+
 # импорт типов и состояний из библиотеки aiogram
 from aiogram import types
 from aiogram.dispatcher import FSMContext
@@ -62,14 +65,16 @@ async def confirm_post(callback_query: types.CallbackQuery, state: FSMContext):
         photos_ids = data['photo']
         msg = data['message']
     # прежде чем отправить, проверяем пост на "плохие слова"
-    with open('data/bad_words.txt', 'r', encoding='utf-8') as file:
-        bad_words = file.read().split(', ')
-    for bw in bad_words:
-        # если плохое слово обнаружено - отменяем публикацию и просим юзера создать пост заново
-        if bw in msg.lower():
-            await bot.send_message(callback_query.from_user.id, MESSAGES['bad_words'])
-            await state.finish()
-            return
+    message_content = set()
+    bad_words_content = set(json.load(open('data/bad_words.json')))
+    text = msg.lower()
+    for word in text.split():
+        translated_word = word.lower().translate(str.maketrans('', '', string.punctuation))
+        message_content.add(translated_word)
+    if message_content.intersection(bad_words_content):
+        await bot.send_message(callback_query.from_user.id, MESSAGES['bad_words'])
+        await state.finish()
+        return
     if photos_ids and len(photos_ids) > 1:
         photos = [types.InputMediaPhoto(photo) for photo in photos_ids]
         photos[0].caption = msg
